@@ -127,3 +127,22 @@ body{background:#050709}
  .showroom-console{margin-top:0}
 }
 @media(prefers-reduced-motion:reduce){.showroom-webgl{cursor:default}}
+
+
+/* SECOND-PASS SHOWROOM FINISH: glass reflections, lens falloff and tactile focus */
+.showroom-stage{isolation:isolate}
+.showroom-stage::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% 46%,transparent 30%,rgba(2,7,10,.28) 76%,rgba(2,5,8,.72) 100%),linear-gradient(115deg,transparent 20%,rgba(142,226,234,.035) 48%,transparent 70%);mix-blend-mode:screen}
+.showroom-webgl{z-index:0;filter:contrast(1.045) saturate(1.08)}
+.showroom-stage.webgl-ready .showroom-card{z-index:2}
+.showroom-console{border-color:rgba(156,224,232,.28);box-shadow:0 24px 80px rgba(0,0,0,.38),inset 0 1px rgba(210,248,250,.045)}
+.showroom-console::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 12%,rgba(150,224,232,.055) 48%,transparent 70%);transform:translateX(-100%);animation:console-sweep 9s ease-in-out infinite}
+@keyframes console-sweep{0%,58%{transform:translateX(-100%)}82%,100%{transform:translateX(100%)}}
+.console-listen{position:relative;z-index:2}
+.showroom-hint{letter-spacing:.2em}
+@media(max-width:760px){
+ .showroom-stage::before{background:radial-gradient(ellipse at 50% 45%,transparent 24%,rgba(2,7,10,.38) 82%,rgba(2,5,8,.68) 100%)}
+ .showroom-console{backdrop-filter:blur(12px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .showroom-console::after{animation:none}
+}
