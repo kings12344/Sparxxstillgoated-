@@ -14,8 +14,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script src="script.js" defer></script>
+  <script type="module" src="water.js"></script>
 </head>
 <body>
+  <canvas id="water-scene" aria-hidden="true"></canvas>
+  <div class="water-vignette" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
   <header class="site-header">
     <a class="wordmark" href="#home" aria-label="Sparxx home">$PARXX<span>*</span></a>
@@ -28,6 +31,7 @@
   <main>
     <section class="hero" id="home">
       <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
+      <div class="hero-water-label"><span>LIQUID STATE / 001</span><span>SCROLL TO DISTORT</span></div>
       <div class="hero-copy reveal">
         <p class="eyebrow"><span class="live-dot"></span> ESWATINI · INDEPENDENT ARTIST</p>
         <h1>$PARXX<span class="title-star">*</span><br><span class="outline">STILL</span><br>GOATED<span class="red-dot">.</span></h1>
@@ -61,7 +65,7 @@
     <section class="visuals-section" id="visuals">
       <div class="visuals-inner">
         <div class="section-heading reveal"><div><p class="eyebrow">02 / THE PICTURE</p><h2>SEEN IT.<br><span class="outline">LIVED IT.</span></h2></div><p class="section-note">The visuals are part of the record. Three videos out now. More chapters on the way.</p></div>
-        <div class="video-feature reveal"><div class="video-art"><div class="video-ring"></div><div class="video-cross">×</div><span class="video-label">THE VISUAL ARCHIVE</span><span class="video-big">SPX<br>VISUALS</span><span class="video-bottom">ESWATINI / WORLDWIDE</span></div><div class="video-caption"><span>01 — OFFICIAL MUSIC VIDEOS</span><span>WATCH THIS SPACE <b>↗</b></span></div></div>
+        <div class="video-feature reveal"><div class="video-art"><div class="video-ring"></div><div class="video-waterline"></div><div class="video-cross">×</div><span class="video-label">THE VISUAL ARCHIVE</span><span class="video-big">SPX<br>VISUALS</span><span class="video-bottom">ESWATINI / WORLDWIDE</span></div><div class="video-caption"><span>01 — OFFICIAL MUSIC VIDEOS</span><span>WATCH THIS SPACE <b>↗</b></span></div></div>
         <p class="link-note">Video embeds and watch links are ready to be connected once the official URLs are shared.</p>
       </div>
     </section>
