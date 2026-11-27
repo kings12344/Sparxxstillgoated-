@@ -32,6 +32,7 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
     const grid=new THREE.GridHelper(70,42,0x28606a,0x15343b);grid.position.set(0,-3.17,-9);grid.material.transparent=true;grid.material.opacity=.34;scene.add(grid);
     const group=new THREE.Group();scene.add(group);
     const panelMeshes=[];
+    const displayObjects=[];
     const makeTexture=(record,index)=>{
       const c=document.createElement("canvas");c.width=900;c.height=1100;
       const ctx=c.getContext("2d");
@@ -56,10 +57,27 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
       frame.position.set(x,y,z);frame.rotation.y=x*.045;group.add(frame);
       const art=new THREE.Mesh(new THREE.PlaneGeometry(2.88,3.55),new THREE.MeshStandardMaterial({map:makeTexture(record,i),metalness:.24,roughness:.42,emissive:0x14262a,emissiveIntensity:.22}));
       art.position.set(x,y,z+.091);art.rotation.y=frame.rotation.y;art.userData.recordIndex=i;group.add(art);panelMeshes.push(art);
+      // A physical vinyl record sits just behind each sleeve and slides out when selected.
+      const vinylGroup=new THREE.Group();
+      vinylGroup.position.set(x+(x<0?1.05:-1.05),y,z+.035);
+      group.add(vinylGroup);
+      const disc=new THREE.Mesh(new THREE.CircleGeometry(1.12,72),new THREE.MeshStandardMaterial({color:0x11171a,metalness:.72,roughness:.28,emissive:new THREE.Color(record.tone),emissiveIntensity:.08,side:THREE.DoubleSide}));
+      vinylGroup.add(disc);
+      for(let ring=0;ring<8;ring++){
+        const groove=new THREE.Mesh(new THREE.TorusGeometry(.32+ring*.095,.006,5,72),new THREE.MeshBasicMaterial({color:ring%2?0x52646a:0x9aaeb0,transparent:true,opacity:.22}));
+        vinylGroup.add(groove);
+      }
+      const label=new THREE.Mesh(new THREE.CircleGeometry(.27,40),new THREE.MeshStandardMaterial({color:new THREE.Color(record.tone),metalness:.18,roughness:.58,side:THREE.DoubleSide}));
+      label.position.z=.012;vinylGroup.add(label);
+      const spindle=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.025,16),new THREE.MeshStandardMaterial({color:0xe0d9c9,metalness:.8,roughness:.2}));
+      spindle.rotation.x=Math.PI/2;spindle.position.z=.025;vinylGroup.add(spindle);
+      const discLight=new THREE.PointLight(new THREE.Color(record.tone),1.8,4,2);discLight.position.set(0,.25,1);vinylGroup.add(discLight);
+      displayObjects.push({frame,art,vinylGroup,glow:null,record,x,y,z});
       const edge=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(3.08,3.75,.18)),new THREE.LineBasicMaterial({color:0x8ddce3,transparent:true,opacity:.54}));
       edge.position.copy(frame.position);edge.rotation.copy(frame.rotation);group.add(edge);
       const glow=new THREE.Mesh(new THREE.PlaneGeometry(3.6,4.25),new THREE.MeshBasicMaterial({color:0x287d8c,transparent:true,opacity:.075,side:THREE.DoubleSide,depthWrite:false}));
       glow.position.set(x,y,z-.11);glow.rotation.y=frame.rotation.y;group.add(glow);
+      displayObjects[i].glow=glow;
       const pedestal=new THREE.Mesh(new THREE.CylinderGeometry(.95,.95,.12,48),new THREE.MeshStandardMaterial({color:0x183139,metalness:.85,roughness:.24,emissive:0x12323a,emissiveIntensity:.32}));
       pedestal.position.set(x,-2.15,z);group.add(pedestal);
       const halo=new THREE.Mesh(new THREE.TorusGeometry(1.03,.018,8,64),new THREE.MeshBasicMaterial({color:record.accent,transparent:true,opacity:.8}));
@@ -81,7 +99,7 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
     starsGeo.setAttribute("position",new THREE.Float32BufferAttribute(starPos,3));
     const stars=new THREE.Points(starsGeo,new THREE.PointsMaterial({color:0x9ddce1,size:.035,transparent:true,opacity:.55}));scene.add(stars);
     const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
-    let progress=0,targetProgress=0,dragging=false,dragged=false,lastX=0,lastY=0,dragX=0,dragY=0,selected=-1,focusedX=0;
+    let progress=0,targetProgress=0,dragging=false,dragged=false,lastX=0,lastY=0,orbitX=0,orbitY=0,selected=-1,focusedX=0;
     const reduced=false;
     const consoleRoot=document.querySelector("#showroom-console");
     const title=consoleRoot?.querySelector("h3"),copy=consoleRoot?.querySelector(".console-copy p"),kicker=consoleRoot?.querySelector(".console-kicker"),count=consoleRoot?.querySelector(".console-track-count"),listen=consoleRoot?.querySelector(".console-listen");
@@ -96,6 +114,10 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
       if(count)count.textContent=r.kind.toUpperCase();
       if(listen)listen.innerHTML='LISTEN TO THE ARTIST <b>↗</b>';
       focusedX=[-1.8,1.9,-1.35,1.65,-1.8,1.35][index];
+      if(listen)listen.setAttribute("aria-label","Open the official $parxx$tillGoated artist music catalogue in Apple Music");
+      const active=displayObjects[index];
+      displayObjects.forEach((item,i)=>{item.vinylGroup.userData.targetOffset=i===index?1.85:1.05;item.vinylGroup.userData.active=i===index;});
+      if(active){active.vinylGroup.userData.active=true;active.art.userData.selectedAt=clock.getElapsedTime();}
       stage.dispatchEvent(new CustomEvent("recordselect",{detail:{index,name:r.name}}));
     };
     buttons.forEach((b,i)=>{b.setAttribute("aria-pressed","false");b.addEventListener("click",()=>selectRecord(i));});
@@ -105,7 +127,7 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
     canvas.addEventListener("pointerdown",e=>{dragging=true;dragged=false;lastX=e.clientX;lastY=e.clientY;dragX=0;dragY=0;canvas.setPointerCapture?.(e.pointerId);});
     canvas.addEventListener("pointermove",e=>{
       setPointer(e);
-      if(dragging){const dx=e.clientX-lastX,dy=e.clientY-lastY;if(Math.abs(dx)+Math.abs(dy)>3)dragged=true;dragX+=dx;dragY+=dy;lastX=e.clientX;lastY=e.clientY;}
+      if(dragging){const dx=e.clientX-lastX,dy=e.clientY-lastY;if(Math.abs(dx)+Math.abs(dy)>3)dragged=true;orbitX=THREE.MathUtils.clamp(orbitX+dx*.003,-.75,.75);orbitY=THREE.MathUtils.clamp(orbitY+dy*.002,-.32,.32);lastX=e.clientX;lastY=e.clientY;}
     });
     canvas.addEventListener("pointerup",e=>{
       if(!dragged){setPointer(e);raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(panelMeshes,false);if(hits.length)selectRecord(hits[0].object.userData.recordIndex);}
@@ -136,20 +158,35 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
       raf=requestAnimationFrame(render);
       const t=clock.getElapsedTime();progress=THREE.MathUtils.lerp(progress,targetProgress,.055);
       const travel=10-progress*25.2;
-      const pointerX=dragging?THREE.MathUtils.clamp(dragX*.003,-1.3,1.3):0;
-      const pointerY=dragging?THREE.MathUtils.clamp(dragY*.002,-.45,.45):0;
-      const drift=Math.sin(t*.18)*.18;
-      const targetX=pointerX+drift+(selected>=0?focusedX*.08:0);
+      const drift=Math.sin(t*.18)*.14;
+      const targetX=orbitX*.9+drift+(selected>=0?focusedX*.38:0);
+      const targetY=1.05-orbitY*.9;
+      const focusedZ=selected>=0?displayObjects[selected].z+7.2:travel;
+      const targetZ=selected>=0?THREE.MathUtils.lerp(travel,focusedZ,.82):travel;
       camera.position.x=THREE.MathUtils.lerp(camera.position.x,targetX,.045);
-      camera.position.y=THREE.MathUtils.lerp(camera.position.y,1.05-pointerY,.045);
-      camera.position.z=THREE.MathUtils.lerp(camera.position.z,travel,.065);
-      camera.rotation.y=THREE.MathUtils.lerp(camera.rotation.y,-pointerX*.055+Math.sin(t*.12)*.012,.04);
-      camera.rotation.x=THREE.MathUtils.lerp(camera.rotation.x,pointerY*.025,.04);
-      group.children.forEach((obj,i)=>{if(obj.isMesh&&obj.geometry.type==="PlaneGeometry"&&obj.userData.recordIndex!==undefined){const k=obj.userData.recordIndex;obj.rotation.z=Math.sin(t*.35+k)*.012;obj.position.y=[.25,.55,.1,.48,.12,.42][k]+Math.sin(t*.55+k*1.4)*.045;}});
+      camera.position.y=THREE.MathUtils.lerp(camera.position.y,targetY,.045);
+      camera.position.z=THREE.MathUtils.lerp(camera.position.z,targetZ,.045);
+      camera.rotation.y=THREE.MathUtils.lerp(camera.rotation.y,-orbitX*.09+Math.sin(t*.12)*.012,.04);
+      camera.rotation.x=THREE.MathUtils.lerp(camera.rotation.x,orbitY*.06,.04);
+      displayObjects.forEach((item,i)=>{
+        const active=item.vinylGroup.userData.active===true;
+        const targetOffset=active?1.85:1.05;
+        item.vinylGroup.position.x=THREE.MathUtils.lerp(item.vinylGroup.position.x,item.x+(item.x<0?targetOffset:-targetOffset),.055);
+        item.vinylGroup.rotation.z+=active?.025:.004;
+        item.vinylGroup.scale.setScalar(THREE.MathUtils.lerp(item.vinylGroup.scale.x,active?1.12:.94,.06));
+        item.art.rotation.z=Math.sin(t*.35+i)*.012;
+        item.art.position.y=item.y+Math.sin(t*.55+i*1.4)*.045;
+        const near=Math.max(0,1-Math.abs(camera.position.z-(item.z+5.8))/8);
+        item.frame.scale.setScalar(THREE.MathUtils.lerp(item.frame.scale.x,1+near*.035+(active?.055:0),.07));
+        if(item.glow)item.glow.material.opacity=.055+near*.09+(active?.12:0);
+      });
+      key.intensity=39+Math.sin(t*.8)*3+(selected>=0?8:0);
+      warm.intensity=24+Math.sin(t*.55+1)*4;
+      stars.rotation.y=t*.006;grid.position.z=-9+Math.sin(t*.15)*.08;
       stars.rotation.y=t*.006;grid.position.z=-9+Math.sin(t*.15)*.08;
       renderer.render(scene,camera);
     };
-    stage.classList.add("webgl-ready");render();
+    stage.classList.add("webgl-ready");selectRecord(0);render();
     document.addEventListener("visibilitychange",()=>{if(document.hidden)cancelAnimationFrame(raf);else if(visible)render();});
   }catch(error){console.warn("3D showroom could not start; accessible catalogue fallback remains available.",error);}
 }
