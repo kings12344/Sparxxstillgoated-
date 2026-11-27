@@ -38,7 +38,7 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
       const ctx=c.getContext("2d");
       const g=ctx.createLinearGradient(0,0,900,1100);g.addColorStop(0,"#1b3038");g.addColorStop(.48,record.tone);g.addColorStop(1,"#05090d");ctx.fillStyle=g;ctx.fillRect(0,0,900,1100);
       const glow=ctx.createRadialGradient(470,350,20,450,430,560);glow.addColorStop(0,record.accent+"bb");glow.addColorStop(.3,record.tone+"88");glow.addColorStop(1,"transparent");ctx.fillStyle=glow;ctx.fillRect(0,0,900,1100);
-      ctx.save();ctx.translate(450,465);ctx.rotate(index%2?.25:-.2);
+      ctx.save();ctx.translate(450,465);ctx.rotate(index%2 ? 0.25 : -0.2);
       for(let r=110;r<590;r+=38){ctx.beginPath();ctx.ellipse(0,0,r,r*.68,0,0,Math.PI*2);ctx.strokeStyle=record.accent+(r%3?"28":"66");ctx.lineWidth=r%3?2:4;ctx.stroke();}
       ctx.restore();
       ctx.fillStyle="rgba(0,0,0,.24)";ctx.fillRect(0,0,900,1100);
@@ -170,7 +170,7 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
       camera.rotation.x=THREE.MathUtils.lerp(camera.rotation.x,orbitY*.06,.04);
       displayObjects.forEach((item,i)=>{
         const active=item.vinylGroup.userData.active===true;
-        const targetOffset=active?1.85:1.05;
+        const targetOffset=active ? 1.85 : 1.05;
         item.vinylGroup.position.x=THREE.MathUtils.lerp(item.vinylGroup.position.x,item.x+(item.x<0?targetOffset:-targetOffset),.055);
         item.vinylGroup.rotation.z+=active ? 0.025 : 0.004;
         item.vinylGroup.scale.setScalar(THREE.MathUtils.lerp(item.vinylGroup.scale.x,active ? 1.12 : 0.94,.06));
@@ -178,7 +178,7 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
         item.art.rotation.z=Math.sin(t*.35+i)*.012;
         item.art.position.y=item.y+Math.sin(t*.55+i*1.4)*.045;
         const near=Math.max(0,1-Math.abs(camera.position.z-(item.z+5.8))/8);
-        item.frame.scale.setScalar(THREE.MathUtils.lerp(item.frame.scale.x,1+near*.035+(active?.055:0),.07));
+        item.frame.scale.setScalar(THREE.MathUtils.lerp(item.frame.scale.x,1+near*.035+(active ? 0.055 : 0),.07));
         if(item.glow)item.glow.material.opacity=.055+near*.09+(active ? .12 : 0);
       });
       key.intensity=39+Math.sin(t*.8)*3+(selected>=0?8:0);
