@@ -22,3 +22,37 @@ const observer = new IntersectionObserver(entries => {
   });
 }, { threshold: 0.12 });
 document.querySelectorAll(".reveal").forEach(element => observer.observe(element));
+
+// Keep the visual field tied to the visitor's scroll position.
+let scrollTick = false;
+const updateScrollProgress = () => {
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = max > 0 ? window.scrollY / max : 0;
+  document.documentElement.style.setProperty("--scroll-progress", progress.toFixed(4));
+  document.body.style.setProperty("--scroll-y", window.scrollY + "px");
+  scrollTick = false;
+};
+window.addEventListener("scroll", () => {
+  if (!scrollTick) {
+    window.requestAnimationFrame(updateScrollProgress);
+    scrollTick = true;
+  }
+}, { passive: true });
+updateScrollProgress();
+
+// Gentle depth response for release artwork; no movement is applied on touch-only devices.
+if (window.matchMedia("(hover:hover) and (pointer:fine)").matches) {
+  document.querySelectorAll(".release-card").forEach(card => {
+    card.addEventListener("pointermove", event => {
+      const rect = card.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width - .5;
+      const y = (event.clientY - rect.top) / rect.height - .5;
+      const cover = card.querySelector(".cover");
+      if (cover) cover.style.transform = `perspective(900px) rotateY(${x * 5}deg) rotateX(${-y * 5}deg) translateY(-5px)`;
+    });
+    card.addEventListener("pointerleave", () => {
+      const cover = card.querySelector(".cover");
+      if (cover) cover.style.transform = "";
+    });
+  });
+}
