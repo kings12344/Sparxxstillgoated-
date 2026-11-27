@@ -42,6 +42,7 @@
   <link rel="stylesheet" href="styles.css">
   <script src="script.js" defer></script>
   <script type="module" src="water.js"></script>
+  <script type="module" src="showroom.js"></script>
 </head>
 <body>
   <canvas id="water-scene" aria-hidden="true"></canvas>
@@ -76,7 +77,8 @@
     <section class="section music-section" id="music">
       <div class="section-heading reveal"><div><p class="eyebrow">01 / THE SOUND</p><h2>THE<br><span class="outline">RELEASES.</span></h2></div><p class="section-note">Every record carries a piece of the story. From the long road to the nights you don't talk about.</p></div>
       <div class="showroom-intro"><span>THE SPARXX SOUND STORE</span><span>TOUCH / SELECT / EXPLORE</span></div>
-      <div class="showroom-stage" id="showroom-stage" aria-label="Interactive music catalogue">
+      <div class="showroom-stage" id="showroom-stage" aria-label="Interactive 3D music store. Drag to look around, scroll to move through the catalogue, and tap a record to select it.">
+        <canvas class="showroom-webgl" id="showroom-webgl" aria-label="Three-dimensional music showroom" tabindex="0"></canvas>
         <div class="showroom-shelf" aria-hidden="true"></div>
         <button class="showroom-card card-moon" type="button" data-track="Moonlight" data-kind="DAY$ B4 · RELEASE" data-description="A late-night chapter from the DAY$ B4 era. Step into the sound and explore the artist catalogue." aria-label="Explore Moonlight">
           <span class="card-index">01 / FEATURED</span><span class="album-art"><i class="art-moon"></i><b>MOON<br>LIGHT</b><small>DAY$ B4</small><em>SPX — 03</em></span><span class="card-meta"><b>MOONLIGHT</b><small>OPEN RECORD <i>↗</i></small></span>
