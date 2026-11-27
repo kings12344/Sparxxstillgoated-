@@ -99,6 +99,11 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
     for(let i=0;i<240;i++)starPos.push((Math.random()-.5)*34,(Math.random()-.5)*16-1,-Math.random()*34);
     starsGeo.setAttribute("position",new THREE.Float32BufferAttribute(starPos,3));
     const stars=new THREE.Points(starsGeo,new THREE.PointsMaterial({color:0x9ddce1,size:.035,transparent:true,opacity:.55}));scene.add(stars);
+    const makeLyric=(text,color,width)=>{const c=document.createElement("canvas");c.width=1800;c.height=360;const x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);x.textAlign="center";x.textBaseline="middle";x.font="900 154px Arial";x.shadowColor=color;x.shadowBlur=42;x.fillStyle=color;x.fillText(text,900,180);x.shadowBlur=0;x.lineWidth=3;x.strokeStyle="rgba(255,255,255,.7)";x.strokeText(text,900,180);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const mat=new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,side:THREE.DoubleSide,opacity:0});const mesh=new THREE.Mesh(new THREE.PlaneGeometry(width,width*.2),mat);return mesh;};
+    const lyricHim=makeLyric("SPARXXSTILLGOATED IS STILL HIM","#f0c66e",8.6);lyricHim.position.set(0,2.65,-3.4);scene.add(lyricHim);
+    const lyricNamanje=makeLyric("NAMANJE","#a7eaf0",5.8);lyricNamanje.position.set(0,-1.85,-11.5);scene.add(lyricNamanje);
+    const lyricSparks=new THREE.Group();scene.add(lyricSparks);
+    for(let i=0;i<48;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(.018+Math.random()*.035,6,6),new THREE.MeshBasicMaterial({color:i%3?0x8de5eb:0xf1c66b,transparent:true,opacity:.8}));m.position.set((Math.random()-.5)*13,(Math.random()-.5)*8,-2-Math.random()*17);m.userData.phase=Math.random()*Math.PI*2;lyricSparks.add(m);}
     const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
     let progress=0,targetProgress=0,dragging=false,dragged=false,lastX=0,lastY=0,orbitX=0,orbitY=0,selected=-1,focusedX=0,cameraFocus=false;
     const reduced=false;
@@ -157,7 +162,7 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
     const render=()=>{
       if(!visible)return;
       raf=requestAnimationFrame(render);
-      const t=clock.getElapsedTime();progress=THREE.MathUtils.lerp(progress,targetProgress,.055);
+      const t=clock.getElapsedTime();lyricHim.material.opacity=.52+Math.sin(t*1.7)*.32;lyricHim.position.y=2.65+Math.sin(t*1.2)*.24;lyricHim.rotation.z=Math.sin(t*.55)*.018;lyricHim.scale.setScalar(1+Math.sin(t*1.45)*.035);lyricNamanje.material.opacity=.48+Math.sin(t*1.3+1.8)*.38;lyricNamanje.position.y=-1.85+Math.sin(t*.9+1)*.3;lyricNamanje.rotation.z=Math.sin(t*.42+1)*-.025;lyricSparks.children.forEach(p=>{p.position.y+=Math.sin(t*1.1+p.userData.phase)*.0018;p.position.x+=Math.cos(t*.7+p.userData.phase)*.0012;});progress=THREE.MathUtils.lerp(progress,targetProgress,.055);
       const travel=10-progress*25.2;
       const drift=Math.sin(t*.18)*.14;
       const targetX=orbitX*.9+drift+(cameraFocus&&selected>=0?focusedX*.38:0);
