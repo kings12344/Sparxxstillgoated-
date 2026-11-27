@@ -23,6 +23,7 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
     scene.fog=new THREE.FogExp2(0x05090d,.026);
     const camera=new THREE.PerspectiveCamera(48,stage.clientWidth/window.innerHeight,.1,120);
     camera.position.set(0,1.1,10);
+    camera.rotation.x=-0.08;
     const ambient=new THREE.AmbientLight(0x9bcbd0,1.35);scene.add(ambient);
     const key=new THREE.PointLight(0x70d4df,42,36,1.8);key.position.set(-4,5,4);scene.add(key);
     const warm=new THREE.PointLight(0xb84c43,26,30,2);warm.position.set(5,1,-9);scene.add(warm);
@@ -124,7 +125,7 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
     const setPointer=(e)=>{
       const rect=canvas.getBoundingClientRect();pointer.x=((e.clientX-rect.left)/rect.width)*2-1;pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;
     };
-    canvas.addEventListener("pointerdown",e=>{dragging=true;dragged=false;lastX=e.clientX;lastY=e.clientY;dragX=0;dragY=0;canvas.setPointerCapture?.(e.pointerId);});
+    canvas.addEventListener("pointerdown",e=>{dragging=true;dragged=false;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture?.(e.pointerId);});
     canvas.addEventListener("pointermove",e=>{
       setPointer(e);
       if(dragging){const dx=e.clientX-lastX,dy=e.clientY-lastY;if(Math.abs(dx)+Math.abs(dy)>3)dragged=true;orbitX=THREE.MathUtils.clamp(orbitX+dx*.003,-.75,.75);orbitY=THREE.MathUtils.clamp(orbitY+dy*.002,-.32,.32);lastX=e.clientX;lastY=e.clientY;}
@@ -167,7 +168,7 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
       camera.position.y=THREE.MathUtils.lerp(camera.position.y,targetY,.045);
       camera.position.z=THREE.MathUtils.lerp(camera.position.z,targetZ,.045);
       camera.rotation.y=THREE.MathUtils.lerp(camera.rotation.y,-orbitX*.09+Math.sin(t*.12)*.012,.04);
-      camera.rotation.x=THREE.MathUtils.lerp(camera.rotation.x,orbitY*.06,.04);
+      camera.rotation.x=THREE.MathUtils.lerp(camera.rotation.x,-.08+orbitY*.06,.04);
       displayObjects.forEach((item,i)=>{
         const active=item.vinylGroup.userData.active===true;
         const targetOffset=active ? 1.85 : 1.05;
