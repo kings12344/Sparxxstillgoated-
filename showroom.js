@@ -118,8 +118,8 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
       if(e.key==="Enter"&&selected<0)selectRecord(0);
     });
     const getProgress=()=>{
-      const r=stage.getBoundingClientRect();const span=Math.max(1,r.height-window.innerHeight);
-      targetProgress=THREE.MathUtils.clamp(-r.top/span,0,1);
+      const r=stage.getBoundingClientRect();const span=Math.max(1,r.height+window.innerHeight);
+      targetProgress=THREE.MathUtils.clamp((window.innerHeight-r.top)/span,0,1);
     };
     window.addEventListener("scroll",getProgress,{passive:true});window.addEventListener("resize",getProgress,{passive:true});getProgress();
     const resize=()=>{
