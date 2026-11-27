@@ -99,14 +99,14 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
     starsGeo.setAttribute("position",new THREE.Float32BufferAttribute(starPos,3));
     const stars=new THREE.Points(starsGeo,new THREE.PointsMaterial({color:0x9ddce1,size:.035,transparent:true,opacity:.55}));scene.add(stars);
     const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
-    let progress=0,targetProgress=0,dragging=false,dragged=false,lastX=0,lastY=0,orbitX=0,orbitY=0,selected=-1,focusedX=0;
+    let progress=0,targetProgress=0,dragging=false,dragged=false,lastX=0,lastY=0,orbitX=0,orbitY=0,selected=-1,focusedX=0,cameraFocus=false;
     const reduced=false;
     const consoleRoot=document.querySelector("#showroom-console");
     const title=consoleRoot?.querySelector("h3"),copy=consoleRoot?.querySelector(".console-copy p"),kicker=consoleRoot?.querySelector(".console-kicker"),count=consoleRoot?.querySelector(".console-track-count"),listen=consoleRoot?.querySelector(".console-listen");
     const buttons=[...stage.querySelectorAll(".showroom-card")];
     const selectRecord=(index)=>{
       if(index<0||index>=records.length)return;
-      selected=index;const r=records[index];
+      selected=index;cameraFocus=true;const r=records[index];
       buttons.forEach((b,i)=>{b.classList.toggle("is-selected",i===index);b.setAttribute("aria-pressed",String(i===index));});
       if(kicker)kicker.textContent="NOW SELECTED / "+String(index+1).padStart(3,"0");
       if(title)title.innerHTML=r.name+"<br><span>IN THE SPOTLIGHT.</span>";
@@ -143,7 +143,7 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
       const r=stage.getBoundingClientRect();const span=Math.max(1,r.height+window.innerHeight);
       targetProgress=THREE.MathUtils.clamp((window.innerHeight-r.top)/span,0,1);
     };
-    window.addEventListener("scroll",getProgress,{passive:true});window.addEventListener("resize",getProgress,{passive:true});getProgress();
+    window.addEventListener("scroll",()=>{cameraFocus=false;getProgress();},{passive:true});window.addEventListener("resize",getProgress,{passive:true});getProgress();
     const resize=()=>{
       const w=Math.max(1,stage.clientWidth),h=window.innerHeight;
       renderer.setSize(w,h,false);renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
@@ -159,10 +159,10 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
       const t=clock.getElapsedTime();progress=THREE.MathUtils.lerp(progress,targetProgress,.055);
       const travel=10-progress*25.2;
       const drift=Math.sin(t*.18)*.14;
-      const targetX=orbitX*.9+drift+(selected>=0?focusedX*.38:0);
+      const targetX=orbitX*.9+drift+(cameraFocus&&selected>=0?focusedX*.38:0);
       const targetY=1.05-orbitY*.9;
       const focusedZ=selected>=0?displayObjects[selected].z+7.2:travel;
-      const targetZ=selected>=0?THREE.MathUtils.lerp(travel,focusedZ,.82):travel;
+      const targetZ=cameraFocus&&selected>=0?THREE.MathUtils.lerp(travel,focusedZ,.82):travel;
       camera.position.x=THREE.MathUtils.lerp(camera.position.x,targetX,.045);
       camera.position.y=THREE.MathUtils.lerp(camera.position.y,targetY,.045);
       camera.position.z=THREE.MathUtils.lerp(camera.position.z,targetZ,.045);
@@ -172,13 +172,14 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
         const active=item.vinylGroup.userData.active===true;
         const targetOffset=active?1.85:1.05;
         item.vinylGroup.position.x=THREE.MathUtils.lerp(item.vinylGroup.position.x,item.x+(item.x<0?targetOffset:-targetOffset),.055);
-        item.vinylGroup.rotation.z+=active?.025:.004;
-        item.vinylGroup.scale.setScalar(THREE.MathUtils.lerp(item.vinylGroup.scale.x,active?1.12:.94,.06));
+        item.vinylGroup.rotation.z+=active ? 0.025 : 0.004;
+        item.vinylGroup.scale.setScalar(THREE.MathUtils.lerp(item.vinylGroup.scale.x,active ? 1.12 : 0.94,.06));
+        item.art.scale.setScalar(THREE.MathUtils.lerp(item.art.scale.x,active ? 1.045 : 1,.06));
         item.art.rotation.z=Math.sin(t*.35+i)*.012;
         item.art.position.y=item.y+Math.sin(t*.55+i*1.4)*.045;
         const near=Math.max(0,1-Math.abs(camera.position.z-(item.z+5.8))/8);
         item.frame.scale.setScalar(THREE.MathUtils.lerp(item.frame.scale.x,1+near*.035+(active?.055:0),.07));
-        if(item.glow)item.glow.material.opacity=.055+near*.09+(active?.12:0);
+        if(item.glow)item.glow.material.opacity=.055+near*.09+(active ? .12 : 0);
       });
       key.intensity=39+Math.sin(t*.8)*3+(selected>=0?8:0);
       warm.intensity=24+Math.sin(t*.55+1)*4;
@@ -186,7 +187,7 @@ if(stage&&canvas&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches
       stars.rotation.y=t*.006;grid.position.z=-9+Math.sin(t*.15)*.08;
       renderer.render(scene,camera);
     };
-    stage.classList.add("webgl-ready");selectRecord(0);render();
+    stage.classList.add("webgl-ready");render();
     document.addEventListener("visibilitychange",()=>{if(document.hidden)cancelAnimationFrame(raf);else if(visible)render();});
   }catch(error){console.warn("3D showroom could not start; accessible catalogue fallback remains available.",error);}
 }
