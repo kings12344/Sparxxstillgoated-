@@ -12,7 +12,11 @@ const world=new THREE.Group();scene.add(world);
 const darkMetal=new THREE.MeshStandardMaterial({color:0x151a1b,metalness:.86,roughness:.24});
 const gold=new THREE.MeshStandardMaterial({color:0xb69a65,metalness:.82,roughness:.22,emissive:0x38250e,emissiveIntensity:.25});
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,130),new THREE.MeshStandardMaterial({color:0x0a0d0e,metalness:.65,roughness:.36}));floor.rotation.x=-Math.PI/2;floor.position.set(0,-4,-28);world.add(floor);
-const rings=[];for(let i=0;i<7;i++){const r=new THREE.Mesh(new THREE.TorusGeometry(5.2+i*.35,.018,8,140),new THREE.MeshBasicMaterial({color:i%2?0x52747a:0xb79a66,transparent:true,opacity:.25-i*.018}));r.position.set(0,1.3,-i*9-5);r.rotation.x=Math.PI/2.7;world.add(r);rings.push(r)}
+// Sound architecture: concentric sub-bass ripples and a sculptural equalizer.
+const bassWaves=[];for(let i=0;i<6;i++){const wave=new THREE.Mesh(new THREE.TorusGeometry(2.2+i*.72,.025,7,128),new THREE.MeshBasicMaterial({color:i%2?0x568b91:0xc4a46c,transparent:true,opacity:.3-i*.025}));wave.position.set(0,-.8,-7-i*8);wave.rotation.x=Math.PI/2;world.add(wave);bassWaves.push(wave)}
+const eqBars=[];const eqMat=[new THREE.MeshStandardMaterial({color:0xb79a65,metalness:.75,roughness:.25,emissive:0x4b3214,emissiveIntensity:.25}),new THREE.MeshStandardMaterial({color:0x477b82,metalness:.65,roughness:.28,emissive:0x173d43,emissiveIntensity:.3})];
+for(let row=0;row<3;row++){for(let i=0;i<31;i++){const x=(i-15)*.43;const h=.25+Math.abs(Math.sin(i*.73+row*1.7))*1.5;const bar=new THREE.Mesh(new THREE.BoxGeometry(.075,h,.075),eqMat[(i+row)%2]);bar.position.set(x,-2.8+h/2,-15-row*15);world.add(bar);eqBars.push({mesh:bar,x,base:h,phase:i*.51+row*1.9})}}
+const speakerStacks=[];for(const x of [-7.2,7.2]){const stack=new THREE.Group();stack.position.set(x,-1.8,-24);world.add(stack);for(let j=0;j<3;j++){const box=new THREE.Mesh(new THREE.BoxGeometry(1.5,1.35,.8),darkMetal);box.position.y=j*1.42;stack.add(box);const cone=new THREE.Mesh(new THREE.CylinderGeometry(.48,.48,.13,48),new THREE.MeshStandardMaterial({color:0x090c0e,metalness:.7,roughness:.3}));cone.rotation.x=Math.PI/2;cone.position.set(0,j*1.42,.47);stack.add(cone);const surround=new THREE.Mesh(new THREE.TorusGeometry(.49,.055,8,48),gold);surround.position.set(0,j*1.42,.55);stack.add(surround);const dustcap=new THREE.Mesh(new THREE.SphereGeometry(.13,20,12),eqMat[1]);dustcap.position.set(0,j*1.42,.57);stack.add(dustcap)}speakerStacks.push(stack)}
 // Artist atlas: six original photographs, each mapped to its own physical gallery frame.
 const crops=[[0,0,.333,.5],[.333,0,.333,.5],[.666,0,.334,.5],[0,.5,.333,.5],[.333,.5,.333,.5],[.666,.5,.334,.5]];
 const photoPositions=[[-4.6,1.3,-8],[4.4,1.8,-14],[-4.2,.6,-21],[4.6,1.2,-28],[-4.6,1.6,-35],[4.4,.7,-42]];
@@ -34,7 +38,11 @@ const travel=scroll*42;camera.position.x=pointer.x*.55+Math.sin(scroll*Math.PI*2
 world.position.y=Math.sin(t*.22)*.14;world.rotation.y=pointer.x*.018+Math.sin(t*.12)*.012;
 photoGroups.forEach((g,i)=>{g.rotation.y=(g.userData.base[0]<0?.18:-.18)+Math.sin(t*.38+i)*.025+pointer.x*.012;g.position.y=g.userData.base[1]+Math.sin(t*.48+i*1.2)*.13});
 records.forEach((g,i)=>{g.rotation.z=t*(i%2?.11:-.09);g.position.y=-1.2+Math.sin(t*.5+i)*.13});
-rings.forEach((r,i)=>{r.rotation.z=t*(i%2?.025:-.02);r.material.opacity=.18+Math.sin(t*.4+i)*.04});
+// Boom-bap visual pulse at 92 BPM. This is a visual tempo, not audio playback.
+const beatPhase=t*(92/60)*Math.PI*2;const kick=Math.pow(Math.max(0,Math.sin(beatPhase)),10);const snare=Math.pow(Math.max(0,Math.sin(beatPhase+Math.PI)),14);
+bassWaves.forEach((w,i)=>{const pulse=1+kick*.13+Math.sin(t*1.3-i*.5)*.018;w.scale.setScalar(pulse);w.material.opacity=.16+kick*.18+Math.sin(t*1.2+i)*.025});
+eqBars.forEach(({mesh,x,base,phase})=>{const groove=.5+.5*Math.sin(beatPhase+phase);const sync=.5+.5*Math.sin(beatPhase*.5+phase*.65);const h=base*(.28+groove*.62+sync*.22)+kick*.22;mesh.scale.y=h/base;mesh.position.y=-2.8+h/2;mesh.position.x=x+Math.sin(t*.7+phase)*.018});
+speakerStacks.forEach(stack=>{stack.children.forEach((part,j)=>{if(j%4===2||j%4===3){const thump=1+kick*.11+snare*.035;part.scale.set(thump,thump,1)}})});
 dust.rotation.y=t*.009;cyan.intensity=34+Math.sin(t*.55)*7;amber.intensity=38+Math.sin(t*.4+1)*8;
 renderer.render(scene,camera)}
 animate();
